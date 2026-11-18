@@ -322,7 +322,7 @@ onMounted(() => {
         <div v-if="devices.error" class="inline-message warning" role="alert">
           <CircleCloseFilled aria-hidden="true" />
           <div>
-            <strong>显卡检测不可用</strong>
+            <strong>{{ devices.gpus.length ? '显卡已找到，但当前 PyTorch 不支持 CUDA' : '显卡检测不可用' }}</strong>
             <p>{{ devices.error }}</p>
           </div>
         </div>
