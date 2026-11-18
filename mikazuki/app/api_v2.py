@@ -321,6 +321,7 @@ async def get_job_events(job_id: str):
     async def event_stream():
         cursor = 0
         last_state = None
+        last_heartbeat = time.monotonic()
         while True:
             job = get_job_store().get_job(job_id)
             if job is None:
@@ -331,12 +332,23 @@ async def get_job_events(job_id: str):
                 yield _format_sse("state", job.model_dump(exclude_none=True))
                 last_state = job.state
 
-            cursor, lines = await asyncio.to_thread(read_log_from, job.logPath or "", cursor=cursor)
+            try:
+                cursor, lines = await asyncio.to_thread(read_log_from, job.logPath or "", cursor=cursor)
+            except OSError:
+                # A transient read failure (e.g. the log is being rotated) must not close the stream.
+                lines = []
             for line in lines:
                 yield _format_sse("log", {"line": line, "cursor": cursor})
 
             if job.state in TERMINAL_STATES:
                 break
+
+            # Text-encoder caching can be silent for minutes. An SSE comment keeps browsers and proxies from
+            # dropping the idle connection and showing "connection lost".
+            now = time.monotonic()
+            if now - last_heartbeat >= 15:
+                yield ": keep-alive\n\n"
+                last_heartbeat = now
             await asyncio.sleep(1)
 
     return StreamingResponse(event_stream(), media_type="text/event-stream", headers=SSE_HEADERS)
