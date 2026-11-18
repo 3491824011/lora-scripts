@@ -462,7 +462,8 @@ def _nvidia_smi_gpus() -> list[dict]:
 def _cuda_unavailable_message() -> str:
     return (
         "检测到 NVIDIA 显卡，但当前 Python 没有可用的 CUDA 版 PyTorch。"
-        "请运行 scripts\\install-cn.ps1 或 scripts\\install.ps1 安装 CUDA 版依赖后再启动。"
+        "请先运行 scripts\\setup-windows.bat（会自动下载 Python 3.11 和 CUDA 依赖），"
+        "或运行 scripts\\install-cn.ps1 / scripts\\install.ps1 安装后再启动。"
     )
 
 

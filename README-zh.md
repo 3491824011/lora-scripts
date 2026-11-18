@@ -2,9 +2,11 @@
 
 LoRA-scripts（SD-Trainer）是基于 [kohya-ss/sd-scripts](https://github.com/kohya-ss/sd-scripts) 的本地训练与数据集工作台。v2 界面集成训练配置、Caption 生成、人工标签编辑、任务日志和训练指标。
 
-> **下载注意**
+> **Windows 第一次运行**
 >
-> 这里提供的是源码，不是免安装便携包。Windows 上第一次运行前，请先执行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装依赖，装好后再双击根目录的 `run_gui.bat`。如果希望下载后无需安装即可使用，请用 `.github/scripts/build-windows-portable.ps1` 打便携包。
+> 先双击 `scripts\setup-windows.bat`。它会按需把 Python 3.11 下载到项目的 `python\` 目录，再安装 CUDA 版 PyTorch 和其余依赖；完成后双击根目录的 `run_gui.bat` 启动。如果你已经有可用的 Python 3.11 环境，也可以直接运行 `scripts\install-cn.ps1`（国内镜像）或 `scripts\install.ps1`。
+>
+> 这里提供的是源码，不是免安装便携包。如果希望下载后无需安装即可使用，请用 `.github/scripts/build-windows-portable.ps1` 打便携包。
 
 [English](README.md) · [人类操作指南](docs/human/README.md) · [MCP 接入](docs/human/mcp.md) · [Agent 使用文档](docs/agent/usage/README.md) · [Agent 开发文档](docs/agent/dev/README.md)
 
@@ -23,7 +25,7 @@ LoRA-scripts（SD-Trainer）是基于 [kohya-ss/sd-scripts](https://github.com/k
 
 MOSS-Image 的 Qwen3.5-9B 文本编码器比较占显存。现在程序会先看一下显卡的总显存，小于 20 GiB 时把文本编码器留在 CPU 上缓存，显存够才搬到 GPU。速度会慢一点，结果是一样的，显存不到 20 GiB 的卡也能先跑起来。
 
-如果设置页提示没有检测到显卡，或者提示当前 Python 没有 CUDA 版 PyTorch，先看启动窗口的提示。常见情况是当前 Python 装的是 CPU 版 PyTorch，重新运行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装 CUDA 版依赖即可。16 GB 显卡只要 PyTorch 能正常识别到 CUDA，就会按上面的低显存方式工作。
+如果设置页提示没有检测到显卡，或者提示当前 Python 没有 CUDA 版 PyTorch，先看启动窗口的提示。常见情况是当前 Python 装的是 CPU 版 PyTorch，先运行 `scripts\setup-windows.bat`（会自动下载 Python 3.11 和 CUDA 依赖），或重新运行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装 CUDA 版依赖即可。16 GB 显卡只要 PyTorch 能正常识别到 CUDA，就会按上面的低显存方式工作。
 
 模型文件不用复制进仓库：模型选择框可以直接浏览本机任意文件夹，也可以在路径输入框里填绝对路径。数据集默认放在 `train/`；这两个目录里的占位文件只是为了让空目录能保留在仓库里，里面没有模型或图片。
 
@@ -82,17 +84,17 @@ Corepack 使用 `frontend/package.json` 中固定的 pnpm 版本。构建结果�
 
 ### Windows
 
-在仓库根目录打开 PowerShell，执行：
+最简单的方式是在仓库根目录双击 `scripts\setup-windows.bat`，它会按需下载 Python 3.11 并安装依赖。默认使用国内 PyPI 镜像；在 PowerShell 中加 `-OfficialIndex` 可改用官方源。也可以在 PowerShell 中执行：
 
 ```powershell
-.\scripts\install-cn.ps1
+.\scripts\setup-windows.ps1
 .\scripts\run_gui.ps1
 ```
 
-使用官方安装源时，将安装命令换成 `.\scripts\install.ps1`。
-安装 CUDA 12.8 版本时使用 `.\scripts\install-cn.ps1 -Cuda cu128` 或 `.\scripts\install.ps1 -Cuda cu128`。
+如果已经有可用的 Python 3.11 环境，可以跳过下载步骤，直接运行 `.\scripts\install-cn.ps1`（国内镜像）或 `.\scripts\install.ps1`。
+安装 CUDA 12.8 版本时使用 `.\scripts\setup-windows.ps1 -Cuda cu128`、`.\scripts\install-cn.ps1 -Cuda cu128` 或 `.\scripts\install.ps1 -Cuda cu128`。
 
-装完依赖后，也可以直接双击仓库根目录的 `run_gui.bat`。它会优先使用 `venv` 或便携版 `python` 目录里的解释器；如果还没安装过依赖，会提示先运行安装脚本。
+装完依赖后，也可以直接双击仓库根目录的 `run_gui.bat`。它会优先使用 `venv` 或项目内 `python` 目录里的解释器；如果还没安装过依赖，会提示先运行 `scripts\setup-windows.bat`。
 
 ### Linux
 

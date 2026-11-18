@@ -2,9 +2,11 @@
 
 LoRA-scripts (SD-Trainer) is a local training and dataset workspace built on [kohya-ss/sd-scripts](https://github.com/kohya-ss/sd-scripts). The v2 interface brings training configuration, caption generation, manual tag editing, job logs and metrics into one application.
 
-> **下载注意**
+> **Windows first run**
 >
-> 这里提供的是源码，不是免安装便携包。Windows 上第一次运行前，请先执行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装依赖，装好后再双击根目录的 `run_gui.bat`。如果希望下载后无需安装即可使用，请用 `.github/scripts/build-windows-portable.ps1` 打便携包。
+> Double-click `scripts\setup-windows.bat` before the first launch. It downloads a private Python 3.11 runtime into `python\` when needed, then installs CUDA-enabled PyTorch and the remaining dependencies. After it finishes, double-click `run_gui.bat` in the repository root. If you already have a working Python 3.11 environment, you can run `scripts\install-cn.ps1` (China mirrors) or `scripts\install.ps1` instead.
+>
+> This repository contains source code, not a portable package. To build a self-contained package, run `.github/scripts/build-windows-portable.ps1`.
 
 [中文](README-zh.md) · [Human guide](docs/human/README.md) · [MCP setup](docs/human/mcp.md) · [Agent usage](docs/agent/usage/README.md) · [Agent development](docs/agent/dev/README.md)
 
@@ -63,17 +65,17 @@ Corepack uses the pnpm version pinned in `frontend/package.json`. The build writ
 
 ### Windows
 
-Run from the repository root in PowerShell:
+The easiest path is to double-click `scripts\setup-windows.bat` in the repository root. It downloads Python 3.11 when needed and then installs the dependencies. It uses the China PyPI mirror by default; add `-OfficialIndex` when running the PowerShell script to use the official index. You can also run it from PowerShell:
 
 ```powershell
-.\scripts\install.ps1
+.\scripts\setup-windows.ps1
 .\scripts\run_gui.ps1
 ```
 
-Use `.\scripts\install-cn.ps1` instead for the installation mirrors in mainland China.
-For the CUDA 12.8 profile, use `.\scripts\install.ps1 -Cuda cu128` or `.\scripts\install-cn.ps1 -Cuda cu128`.
+If Python 3.11 is already available, skip the download and run `.\scripts\install-cn.ps1` (China mirrors) or `.\scripts\install.ps1`.
+For the CUDA 12.8 profile, use `.\scripts\setup-windows.ps1 -Cuda cu128`, `.\scripts\install-cn.ps1 -Cuda cu128`, or `.\scripts\install.ps1 -Cuda cu128`.
 
-After installing the dependencies, you can also double-click `run_gui.bat` in the repository root. It prefers the interpreter in `venv` or the portable `python` directory, and reminds you to run the installer first if neither exists. If the settings page shows no GPU, check the startup console: installing only `requirements.txt` does not install CUDA-enabled PyTorch; rerun `scripts\install.ps1` or `scripts\install-cn.ps1` to install the CUDA build.
+After installing the dependencies, you can also double-click `run_gui.bat` in the repository root. It prefers the interpreter in `venv` or the project `python` directory, and reminds you to run `scripts\setup-windows.bat` first if neither exists. If the settings page shows no GPU, check the startup console: installing only `requirements.txt` does not install CUDA-enabled PyTorch; run `scripts\setup-windows.bat` or the installer again to install the CUDA build.
 
 ### Linux
 

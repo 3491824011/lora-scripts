@@ -16,7 +16,8 @@
    - 新增 `frontend/workbench_tools.js`，由 `mikazuki/app/application.py` 在 `/train` 页面运行时注入「导入配置」「保存配置」按钮。
 
 3. 下载后可直接启动
-   - 根目录新增 `run_gui.bat`：优先使用 `venv` 或便携版 `python`，都找不到时提示先运行安装脚本。
+   - 根目录新增 `run_gui.bat`：优先使用 `venv` 或项目内 `python`，都找不到时提示先运行 `scripts\setup-windows.bat`。
+   - 新增 `scripts/setup-windows.ps1` 与 `scripts/setup-windows.bat`：首次运行时按需下载 Python 3.11 到项目的 `python/` 目录，再调用安装脚本安装 CUDA 版 PyTorch 和其余依赖。
    - 提交构建好的 `frontend/dist`；从 GitHub 下载源码后不需要再装 Node.js 构建前端。
 
 4. 模型选择器支持本机任意目录
@@ -25,7 +26,7 @@
 
 5. 显卡检测。
    - `GET /api/v2/devices/gpus` 在 PyTorch 没有 CUDA 时尝试读取 `nvidia-smi`，设置页仍能显示显卡型号和显存，并提示当前 Python 没有安装 CUDA 版 PyTorch。
-   - `run_gui.bat` 启动前检查当前 Python 的 PyTorch 和 CUDA 状态；没有 PyTorch 时提示安装并退出，没有 CUDA 时打印明确提示。
+   - `run_gui.bat` 启动前检查当前 Python 的 PyTorch 和 CUDA 状态；没有 PyTorch 时提示运行 `scripts\setup-windows.bat` 并退出，没有 CUDA 时打印明确提示。
 
 6. 多子目录数据集。
    - 选择没有直接图片、但包含 `10_角色`、`6_身体` 这类子目录的父目录时，编译器会按目录名前缀生成多个 `[[datasets.subsets]]`，每个子目录使用自己的重复次数。

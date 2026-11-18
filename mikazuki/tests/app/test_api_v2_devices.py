@@ -22,6 +22,7 @@ class DevicesApiTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(fallback, result["gpus"])
         self.assertIn("CUDA", result["error"])
+        self.assertIn("setup-windows.bat", result["error"])
 
     async def test_list_gpus_reports_torch_devices(self) -> None:
         class Props:

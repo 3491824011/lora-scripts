@@ -30,7 +30,7 @@ if exist "%~dp0.venv\Scripts\python.exe" (
 where python >nul 2>nul
 if errorlevel 1 (
     echo Python was not found.
-    echo Run scripts\install.ps1 or scripts\install-cn.ps1 first.
+    echo Run scripts\setup-windows.bat first. It downloads Python 3.11 and the dependencies.
     pause
     exit /b 1
 )
@@ -40,7 +40,7 @@ set "PYTHON_EXE=python"
 "%PYTHON_EXE%" -c "import torch" >nul 2>nul
 if errorlevel 1 (
     echo [ERROR] PyTorch is not installed for the selected Python.
-    echo Run scripts\install.ps1 or scripts\install-cn.ps1 first.
+    echo Run scripts\setup-windows.bat first. It downloads Python 3.11 and the dependencies.
     echo Selected Python: %PYTHON_EXE%
     pause
     exit /b 1
@@ -50,7 +50,7 @@ if errorlevel 1 (
 if errorlevel 2 (
     echo.
     echo [WARN] CUDA-enabled PyTorch was not detected.
-    echo If this computer has an NVIDIA GPU, run scripts\install-cn.ps1 or scripts\install.ps1 to install the CUDA build.
+    echo If this computer has an NVIDIA GPU, run scripts\setup-windows.bat to install the CUDA build.
     echo Selected Python: %PYTHON_EXE%
     echo.
 )

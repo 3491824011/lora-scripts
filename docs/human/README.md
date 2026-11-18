@@ -31,7 +31,7 @@ GUI 启动时默认开启 MCP，连接地址为本机同端口的 `/mcp/`，默�
 
 Windows 便携版完整解压后双击 `run_gui.bat`，无需额外安装 Python、Node.js、CUDA Toolkit。默认 cu130 和回退 cu128 包的选择与驱动要求见[安装文档](../../README-zh.md#windows-nvidia-便携版)。cu128 是 CUDA/驱动组合回退，并非所有旧 GPU 的兼容包。
 
-源码版启动后默认访问 [http://127.0.0.1:28000](http://127.0.0.1:28000)。若提示前端未构建，在 `frontend` 运行 `corepack pnpm install --frozen-lockfile` 和 `corepack pnpm run build`。更新后端依赖后重新运行安装器并重启。
+源码版第一次运行前，先双击 `scripts\setup-windows.bat`：它会按需把 Python 3.11 下载到项目的 `python\` 目录，再安装 CUDA 版 PyTorch 和其余依赖；完成后双击根目录的 `run_gui.bat`。如果已经有可用的 Python 3.11 环境，也可以直接运行 `scripts\install-cn.ps1` 或 `scripts\install.ps1`。启动后默认访问 [http://127.0.0.1:28000](http://127.0.0.1:28000)。若提示前端未构建，在 `frontend` 运行 `corepack pnpm install --frozen-lockfile` 和 `corepack pnpm run build`。更新后端依赖后重新运行安装器并重启。
 
 ## 排障
 
