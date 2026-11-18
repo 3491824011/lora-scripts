@@ -13,6 +13,13 @@ from mikazuki.storage.files import (
 
 
 class FilesApiTests(unittest.IsolatedAsyncioTestCase):
+    async def test_browse_files_accepts_local_root(self) -> None:
+        with patch("mikazuki.app.api_v2.list_files", return_value=[]) as list_mock:
+            response = await api_v2.browse_files(kind="model", root="local", path=r"G:\models")
+
+        self.assertEqual({"items": []}, response)
+        list_mock.assert_called_once_with(kind="model", root="local", path=r"G:\models")
+
     async def test_reports_file_manager_capability(self) -> None:
         capability = {
             "available": True,

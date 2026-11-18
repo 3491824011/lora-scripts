@@ -91,6 +91,15 @@ class StorageFilesPathBoundaryTests(unittest.TestCase):
         with self.assertRaises(BrowsePathError):
             list_files(root="test", path=str(self.outside.resolve()))
 
+    def test_local_root_allows_absolute_paths_outside_repository_roots(self) -> None:
+        (self.outside / "model.safetensors").write_bytes(b"model")
+
+        items = list_files(root="local", path=str(self.outside.resolve()))
+        model_items = list_files(kind="model", root="local", path=str(self.outside.resolve()))
+
+        self.assertEqual(["model.safetensors", "secret.txt"], [item.name for item in items])
+        self.assertEqual(["model.safetensors"], [item.name for item in model_items])
+
     def test_directory_symlink_to_outside_root_is_rejected(self) -> None:
         link = self.root / "outside-link"
         try:

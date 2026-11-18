@@ -31,6 +31,11 @@ ROOTS: Dict[str, Path] = {
     "workspace": app_root(),
 }
 
+# The model picker can browse any local directory, not just this repository's
+# models folder. Other roots keep their strict boundaries because they are
+# server-managed paths.
+LOCAL_ROOT = "local"
+
 MODEL_EXTENSIONS = {".safetensors", ".ckpt", ".pt", ".pth"}
 IMAGE_MEDIA_TYPES = {
     ".jpg": "image/jpeg",
@@ -66,8 +71,11 @@ class FileManagerLaunchError(RuntimeError):
 
 
 def list_files(kind: str = "file", root: str = "workspace", path: Optional[str] = None) -> List[FileItem]:
-    base = ROOTS.get(root, ROOTS["workspace"]).resolve()
-    target = _resolve_path(base, path)
+    if root == LOCAL_ROOT:
+        target = _resolve_local_path(path)
+    else:
+        base = ROOTS.get(root, ROOTS["workspace"]).resolve()
+        target = _resolve_path(base, path)
     if not target.is_dir():
         return []
 
@@ -235,6 +243,21 @@ def _resolve_path(base: Path, path: Optional[str]) -> Path:
     except ValueError as error:
         raise BrowsePathError("requested path is outside the selected root") from error
     return resolved
+
+
+def _resolve_local_path(path: Optional[str]) -> Path:
+    """Resolve a model-picker path against the local filesystem.
+
+    Model files often live on another drive or in a shared folder outside the
+    cloned repository. Unlike the managed roots above, this browser is meant
+    to see the machine's real filesystem.
+    """
+    if not path:
+        return Path.home().resolve()
+    candidate = Path(path).expanduser()
+    if not candidate.is_absolute():
+        candidate = Path.home() / candidate
+    return candidate.resolve()
 
 
 def _unavailable_file_manager(system: str, reason: str) -> Dict[str, object]:

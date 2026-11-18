@@ -50,10 +50,10 @@ const pickerKind = computed(() => {
   return props.param.fileKind || control.value
 })
 const pickerRoot = computed(() => {
-  if (isModelSource.value) return 'models'
+  if (isModelSource.value || isFileOrFolder.value) return 'local'
   if (props.param.fileKind === 'dataset') return 'train'
   if (props.param.fileKind === 'output') return 'output'
-  if (['model', 'lora', 'vae'].includes(props.param.fileKind || '')) return 'models'
+  if (['model', 'lora', 'vae'].includes(props.param.fileKind || '')) return 'local'
   return 'workspace'
 })
 const defaultValue = computed(() => props.param.effectiveDefault ?? props.param.default)

@@ -44,6 +44,7 @@ const rootLabel = computed(() => {
     outputs: '输出目录',
     logs: '日志目录',
     workspace: '工作区',
+    local: '本地文件夹',
   }
   return labels[props.root] || props.root
 })
@@ -56,15 +57,16 @@ const rootFallbackPath = computed(() => {
     outputs: 'output',
     logs: 'logs',
     workspace: '.',
+    local: '',
   }
-  return paths[props.root] || props.root
+  return paths[props.root] ?? props.root
 })
 const currentPathLabel = computed(() => currentPath.value || `${rootLabel.value}（根目录）`)
 const currentFolderPath = computed(() => currentPath.value || rootFallbackPath.value)
 const canGoUp = computed(() => {
   if (!currentPath.value) return false
   const current = normalizePath(currentPath.value)
-  const boundary = normalizePath(rootPath.value)
+  const boundary = props.root === 'local' ? '' : normalizePath(rootPath.value)
   if (boundary && current === boundary) return false
   const parent = parentPath(currentPath.value)
   return Boolean(parent) && normalizePath(parent) !== current
