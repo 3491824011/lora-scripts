@@ -24,7 +24,7 @@
 
 以下内容属于本地运行数据或个人训练资料，已在 `.gitignore` 中排除：
 
-- `models/`、`train/`、`output/`、`logs/`
+- `models/`、`train/`、`output/`、`logs/` 下的实际模型、数据集和训练产物（仅保留 `models/put stable diffusion model here.txt` 与 `train/.keep` 两个目录占位文件）
 - `python/`、`tokenizer/`
 - `config/runs/`、`config/caption-jobs.db`
 - `参数/`（个人训练配置，包含本机路径、数据集说明和训练参数）
