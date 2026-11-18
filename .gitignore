@@ -35,7 +35,8 @@ huggingface/hub/version_diffusers_cache.txt
 
 frontend-old/*
 frontend/node_modules/
-frontend/dist/
+
+# frontend/dist is committed so a source download has a usable UI without a Node build
 
 # local runtime data / personal training configs (must never be committed)
 tokenizer/

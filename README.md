@@ -29,11 +29,9 @@ Starting the GUI also enables the built-in MCP server by default. Connect a loca
 
 ## Windows NVIDIA portable
 
-Download `lora-scripts_windows_portable_nvidia.7z` from [Releases](https://github.com/Akegarasu/lora-scripts/releases), extract the complete archive, and double-click `run_gui.bat` inside it.
+If you downloaded this repository as source, it does not include a Python runtime. Follow [Install from source](#install-from-source) below to install the dependencies, then double-click `run_gui.bat` in the repository root. The built frontend is already included, so Node.js is not required just to start the app.
 
-The default package includes Python 3.11.9, PyTorch 2.14.1 / CUDA 13.0 and the built frontend. A CUDA 12.8 fallback is available as `lora-scripts_windows_portable_nvidia_cu128.7z`, with PyTorch 2.11.0. Both include the matching ONNX GPU runtime and need Windows x64 plus a compatible NVIDIA driver; no separate Python, Node.js or CUDA Toolkit installation is required.
-
-The default CUDA 13 package needs an R580 or newer driver. The cu128 package offers a different CUDA/driver combination; both packages require Turing or newer GPUs, so it does not restore Pascal or Volta support. Model weights and datasets are supplied separately. See [portable operation and troubleshooting](docs/human/README.md).
+The upstream [Releases](https://github.com/Akegarasu/lora-scripts/releases) page provides `lora-scripts_windows_portable_nvidia.7z` as a self-contained package, but it is the upstream build without the changes in this repository. To build a portable package from this repository, run `.github/scripts/build-windows-portable.ps1`.
 
 ## Install from source
 
@@ -42,13 +40,13 @@ Python 3.11 x64 is the recommended and tested version for the default CUDA 13.0 
 The default installer provides PyTorch 2.14.1, torchvision 0.29.1 and xFormers 0.0.35 for CUDA 13.0. Select `-Cuda cu128` on Windows or `--cuda cu128` on Linux for PyTorch 2.11.0 / torchvision 0.26.0. To keep another compatible PyTorch build, install it into the project environment first and pass `-SkipTorch` or `--skip-torch`; PyTorch must be at least 2.6. Startup selects ONNX Runtime to match the installed CUDA PyTorch build.
 
 ```sh
-git clone https://github.com/Akegarasu/lora-scripts
+git clone https://github.com/3491824011/lora-scripts
 cd lora-scripts
 ```
 
 ### Build the frontend
 
-The current development version has `frontend.autoDownload` disabled in `version.json`. Build the frontend before starting a source checkout, and rebuild it after frontend changes:
+The current development version has `frontend.autoDownload` disabled in `version.json`. The repository includes a built `frontend/dist`, so a normal download can start without Node.js. Rebuild it after frontend changes:
 
 ```sh
 cd frontend
@@ -70,6 +68,8 @@ Run from the repository root in PowerShell:
 
 Use `.\scripts\install-cn.ps1` instead for the installation mirrors in mainland China.
 For the CUDA 12.8 profile, use `.\scripts\install.ps1 -Cuda cu128` or `.\scripts\install-cn.ps1 -Cuda cu128`.
+
+After installing the dependencies, you can also double-click `run_gui.bat` in the repository root. It prefers the interpreter in `venv` or the portable `python` directory, and reminds you to run the installer first if neither exists.
 
 ### Linux
 

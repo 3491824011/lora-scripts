@@ -46,11 +46,9 @@ GUI 启动时默认同时开启内置 MCP。在本机 MCP 客户端选择 Stream
 
 ## Windows NVIDIA 便携版
 
-从 [Releases](https://github.com/Akegarasu/lora-scripts/releases) 下载 `lora-scripts_windows_portable_nvidia.7z`，完整解压后双击包内的 `run_gui.bat`。
+如果你下载的是这个仓库的源码，它不包含 Python 运行时。先按下面「从源码安装」安装依赖，再双击根目录的 `run_gui.bat` 启动；仓库里已经带了构建好的前端，不需要另外安装 Node.js。
 
-默认包包含 Python 3.11.9、PyTorch 2.14.1 / CUDA 13.0 和构建好的前端。另提供 `lora-scripts_windows_portable_nvidia_cu128.7z`，使用 PyTorch 2.11.0 / CUDA 12.8。两者均内置匹配的 ONNX GPU 运行时，需要 Windows x64 与兼容的 NVIDIA 驱动，无需另装 Python、Node.js 或 CUDA Toolkit。
-
-默认 CUDA 13 包需要 R580 或更新驱动。cu128 包提供另一种 CUDA/驱动组合；两个包均要求 Turing 或更新架构，不恢复 Pascal、Volta 显卡支持。模型权重与训练数据需自行准备。详见[便携版使用与排障](docs/human/README.md)。
+官方上游的 [Releases](https://github.com/Akegarasu/lora-scripts/releases) 提供 `lora-scripts_windows_portable_nvidia.7z` 免安装便携包，但那是上游原版，不包含本仓库新增的功能。需要给本仓库打便携包时，可以运行 `.github/scripts/build-windows-portable.ps1`。
 
 ## 从源码安装
 
@@ -59,13 +57,13 @@ GUI 启动时默认同时开启内置 MCP。在本机 MCP 客户端选择 Stream
 安装器默认提供 PyTorch 2.14.1、torchvision 0.29.1、xFormers 0.0.35 与 CUDA 13.0。Windows 传入 `-Cuda cu128`、Linux 传入 `--cuda cu128`，可选择 PyTorch 2.11.0 / torchvision 0.26.0。如需保留其他兼容组合，先在项目环境中安装对应的 PyTorch，再传入 `-SkipTorch` 或 `--skip-torch`；PyTorch 至少需要 2.6。启动时会按已安装 PyTorch 的 CUDA 版本选择 ONNX Runtime。
 
 ```sh
-git clone https://github.com/Akegarasu/lora-scripts
+git clone https://github.com/3491824011/lora-scripts
 cd lora-scripts
 ```
 
 ### 构建前端
 
-当前开发版本在 `version.json` 中关闭了 `frontend.autoDownload`。源码首次启动前需要构建前端；前端代码更新后也需要重新构建：
+当前开发版本在 `version.json` 中关闭了 `frontend.autoDownload`。仓库里已经带了一份构建好的 `frontend/dist`，普通下载可以直接启动；修改前端代码后，按下面的步骤重新构建：
 
 ```sh
 cd frontend
@@ -87,6 +85,8 @@ Corepack 使用 `frontend/package.json` 中固定的 pnpm 版本。构建结果�
 
 使用官方安装源时，将安装命令换成 `.\scripts\install.ps1`。
 安装 CUDA 12.8 版本时使用 `.\scripts\install-cn.ps1 -Cuda cu128` 或 `.\scripts\install.ps1 -Cuda cu128`。
+
+装完依赖后，也可以直接双击仓库根目录的 `run_gui.bat`。它会优先使用 `venv` 或便携版 `python` 目录里的解释器；如果还没安装过依赖，会提示先运行安装脚本。
 
 ### Linux
 
