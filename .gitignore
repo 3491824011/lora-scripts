@@ -35,3 +35,8 @@ huggingface/hub/version_diffusers_cache.txt
 frontend-old/*
 frontend/node_modules/
 frontend/dist/
+
+# local runtime data / personal training configs (must never be committed)
+tokenizer/
+参数/
+*.bak

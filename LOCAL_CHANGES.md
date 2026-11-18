@@ -1,0 +1,28 @@
+# 本地修改说明
+
+本仓库基于 [Akegarasu/lora-scripts](https://github.com/Akegarasu/lora-scripts) 的 main 分支提交 `234fb6fd8fb765b648740961a367f788f4674aef`（2026-11-03，提交信息：`fix: build manual releases from the selected branch`）。
+
+## 相对上游的改动
+
+1. `scripts/dev/moss_image_train_network.py`
+   - 缓存文本编码器输出前检测显存总量。
+   - 显存小于 20 GiB 时，Qwen3.5-9B 文本编码器保留在 CPU，避免小显存显卡 OOM；结果一致，只是速度更慢。
+
+2. 训练配置导入 / 保存
+   - 新增 `mikazuki/compiler/importer.py`：解析 sd-scripts 的 `train.toml`，映射到工作台草稿参数并返回逐键状态。
+   - 新增 `mikazuki/compiler/models.py` 中的 `ImportMappingEntry`、`ImportResult`、`ImportDraftRequest`。
+   - 新增 `POST /api/v2/drafts/import` 接口（`mikazuki/app/api_v2.py`）。
+   - 新增 `frontend/import.html` 独立导入页面。
+   - 新增 `frontend/workbench_tools.js`，由 `mikazuki/app/application.py` 在 `/train` 页面运行时注入「导入配置」「保存配置」按钮。
+
+## 未纳入仓库的内容
+
+以下内容属于本地运行数据或个人训练资料，已在 `.gitignore` 中排除：
+
+- `models/`、`train/`、`output/`、`logs/`
+- `python/`、`tokenizer/`
+- `config/runs/`、`config/caption-jobs.db`
+- `参数/`（个人训练配置，包含本机路径、数据集说明和训练参数）
+- `scripts/dev/moss_image_train_network.py.bak`
+
+仓库中不包含任何模型权重、训练素材图片、数据集或训练产物。
