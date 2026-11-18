@@ -5,6 +5,23 @@ LoRA-scripts（SD-Trainer）是基于 [kohya-ss/sd-scripts](https://github.com/k
 [English](README.md) · [人类操作指南](docs/human/README.md) · [MCP 接入](docs/human/mcp.md) · [Agent 使用文档](docs/agent/usage/README.md) · [Agent 开发文档](docs/agent/dev/README.md)
 
 
+## 这个版本多了什么
+
+跟上游原版相比，当前仓库主要加了两个日常训练会用到的功能。
+
+### 导入已有的训练配置
+
+如果你之前用 sd-scripts 训练过，手里已经有 `train.toml`，不用再对着工作台从头填一遍。训练页左下角有「导入配置」，选 `.toml` 或 `.txt` 就可以。能对上号的参数会填进当前草稿，认不出来的会单独列出来，不会悄悄丢掉。导入只是读取文件，不会改动原来的配置，确认没问题再保存。
+
+如果 `train.toml` 里的 `[dataset] dataset_config` 指向另一个数据集配置文件，可以打开 `/import` 页面（例如 `http://127.0.0.1:28000/import`，端口按实际设置）把两份文件一起选上；按文件路径导入时，程序也会自动读取相对路径指向的数据集文件。
+
+### 小显存跑 MOSS-Image
+
+MOSS-Image 的 Qwen3.5-9B 文本编码器比较占显存。现在程序会先看一下显卡的总显存，小于 20 GiB 时把文本编码器留在 CPU 上缓存，显存够才搬到 GPU。速度会慢一点，结果是一样的，显存不到 20 GiB 的卡也能先跑起来。
+
+模型文件放在 `models/`，数据集放在 `train/`。这两个目录里的占位文件只是为了让空目录能保留在仓库里，里面没有模型或图片。
+
+
 ## 训练工作台
 
 选择训练器，配置模型资产和数据集，在启动任务前查看参数帮助与配置检查结果。表单随训练器展示对应参数，支持常用/全部参数切换、搜索和配置完成度检查。
