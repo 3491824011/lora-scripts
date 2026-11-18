@@ -15,6 +15,10 @@
    - 新增 `frontend/import.html` 独立导入页面；若 `train.toml` 通过 `[dataset] dataset_config` 引用独立数据集 TOML，可在该页补选数据集文件。
    - 新增 `frontend/workbench_tools.js`，由 `mikazuki/app/application.py` 在 `/train` 页面运行时注入「导入配置」「保存配置」按钮。
 
+3. 下载后可直接启动
+   - 根目录新增 `run_gui.bat`：优先使用 `venv` 或便携版 `python`，都找不到时提示先运行安装脚本。
+   - 提交构建好的 `frontend/dist`；从 GitHub 下载源码后不需要再装 Node.js 构建前端。
+
 ## 使用提示
 
 - 模型文件放在仓库根目录的 `models/` 下即可在模型选择框中浏览；也可以在路径输入框中直接填写本机任意绝对路径。`models/` 中的占位文件用于保证目录存在，不包含模型权重。
