@@ -23,6 +23,8 @@ LoRA-scripts（SD-Trainer）是基于 [kohya-ss/sd-scripts](https://github.com/k
 
 MOSS-Image 的 Qwen3.5-9B 文本编码器比较占显存。现在程序会先看一下显卡的总显存，小于 20 GiB 时把文本编码器留在 CPU 上缓存，显存够才搬到 GPU。速度会慢一点，结果是一样的，显存不到 20 GiB 的卡也能先跑起来。
 
+如果设置页提示没有检测到显卡，或者提示当前 Python 没有 CUDA 版 PyTorch，先看启动窗口的提示。常见情况是当前 Python 装的是 CPU 版 PyTorch，重新运行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装 CUDA 版依赖即可。16 GB 显卡只要 PyTorch 能正常识别到 CUDA，就会按上面的低显存方式工作。
+
 模型文件不用复制进仓库：模型选择框可以直接浏览本机任意文件夹，也可以在路径输入框里填绝对路径。数据集默认放在 `train/`；这两个目录里的占位文件只是为了让空目录能保留在仓库里，里面没有模型或图片。
 
 

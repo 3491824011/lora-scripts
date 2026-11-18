@@ -73,7 +73,7 @@ Run from the repository root in PowerShell:
 Use `.\scripts\install-cn.ps1` instead for the installation mirrors in mainland China.
 For the CUDA 12.8 profile, use `.\scripts\install.ps1 -Cuda cu128` or `.\scripts\install-cn.ps1 -Cuda cu128`.
 
-After installing the dependencies, you can also double-click `run_gui.bat` in the repository root. It prefers the interpreter in `venv` or the portable `python` directory, and reminds you to run the installer first if neither exists.
+After installing the dependencies, you can also double-click `run_gui.bat` in the repository root. It prefers the interpreter in `venv` or the portable `python` directory, and reminds you to run the installer first if neither exists. If the settings page shows no GPU, check the startup console: installing only `requirements.txt` does not install CUDA-enabled PyTorch; rerun `scripts\install.ps1` or `scripts\install-cn.ps1` to install the CUDA build.
 
 ### Linux
 

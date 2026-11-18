@@ -23,6 +23,10 @@
    - `mikazuki/storage/files.py` 新增 `local` 浏览根，允许文件选择器读取仓库目录之外的本地模型文件夹。
    - `frontend/src/components/ParamControl.vue` 与 `FilePicker.vue` 的模型路径改用本地根，并允许从当前目录一直向上浏览到盘符根。
 
+5. 显卡检测。
+   - `GET /api/v2/devices/gpus` 在 PyTorch 没有 CUDA 时尝试读取 `nvidia-smi`，设置页仍能显示显卡型号和显存，并提示当前 Python 没有安装 CUDA 版 PyTorch。
+   - `run_gui.bat` 启动前检查当前 Python 的 PyTorch 和 CUDA 状态；没有 PyTorch 时提示安装并退出，没有 CUDA 时打印明确提示。
+
 ## 使用提示
 
 - 模型文件不需要复制到仓库里：模型选择框可以浏览本机任意文件夹，也可以直接在路径输入框中填写绝对路径。`models/` 只是默认占位目录，不包含模型权重。

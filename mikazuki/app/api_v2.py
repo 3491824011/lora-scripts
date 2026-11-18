@@ -1,6 +1,9 @@
 import asyncio
+import csv
 import os
 import platform
+import shutil
+import subprocess
 import time
 from pathlib import Path
 from typing import Optional
@@ -407,23 +410,98 @@ async def get_safetensors_metadata(path: str = Query(min_length=1)):
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 
+def _nvidia_smi_gpus() -> list[dict]:
+    """Read GPU names and memory from nvidia-smi.
+
+    This keeps the settings page useful when the Python environment has no
+    CUDA-enabled PyTorch. Training still needs a CUDA build; the caller adds
+    that explanation to the response.
+    """
+    executable = shutil.which("nvidia-smi")
+    if not executable:
+        return []
+    try:
+        output = subprocess.check_output(
+            [
+                executable,
+                "--query-gpu=index,name,memory.total,memory.free",
+                "--format=csv,noheader,nounits",
+            ],
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+
+    gpus = []
+    for row in csv.reader(output.splitlines()):
+        if len(row) < 4:
+            continue
+        try:
+            index = row[0].strip()
+            name = ", ".join(part.strip() for part in row[1:-2]).strip()
+            total_mb = float(row[-2].strip())
+            free_mb = float(row[-1].strip())
+        except ValueError:
+            continue
+        if not name:
+            continue
+        gpus.append(
+            {
+                "id": index,
+                "name": name,
+                "vramTotal": int(total_mb * 1024 * 1024),
+                "vramFree": int(free_mb * 1024 * 1024),
+            }
+        )
+    return gpus
+
+
+def _cuda_unavailable_message() -> str:
+    return (
+        "检测到 NVIDIA 显卡，但当前 Python 没有可用的 CUDA 版 PyTorch。"
+        "请运行 scripts\\install-cn.ps1 或 scripts\\install.ps1 安装 CUDA 版依赖后再启动。"
+    )
+
+
 @router.get("/devices/gpus")
 async def list_gpus():
-    import torch
+    try:
+        import torch
 
-    if not torch.cuda.is_available():
+        cuda_available = torch.cuda.is_available()
+    except Exception:
+        torch = None
+        cuda_available = False
+
+    if not cuda_available:
+        fallback = _nvidia_smi_gpus()
+        if fallback:
+            return {"gpus": fallback, "error": _cuda_unavailable_message()}
         return {"gpus": [], "error": "torch cuda is not available"}
 
     gpus = []
     for index in range(torch.cuda.device_count()):
-        props = torch.cuda.get_device_properties(index)
-        free, total = torch.cuda.mem_get_info(index)
+        try:
+            props = torch.cuda.get_device_properties(index)
+            name = torch.cuda.get_device_name(index)
+        except Exception:
+            continue
+        try:
+            free, total = torch.cuda.mem_get_info(index)
+        except Exception:
+            free, total = 0, getattr(props, "total_memory", 0)
         gpus.append(
             {
                 "id": str(index),
-                "name": torch.cuda.get_device_name(index),
-                "vramTotal": int(total or props.total_memory),
+                "name": name,
+                "vramTotal": int(total or getattr(props, "total_memory", 0)),
                 "vramFree": int(free),
             }
         )
+
+    if not gpus:
+        fallback = _nvidia_smi_gpus()
+        if fallback:
+            return {"gpus": fallback, "error": _cuda_unavailable_message()}
     return {"gpus": gpus}

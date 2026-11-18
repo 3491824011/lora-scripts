@@ -15,9 +15,10 @@ Triton、Flash Attention 和 flash-linear-attention 不是默认路径的必需�
 1. 选择 **MOSS-Image LoRA**，准备 MOSS-Image Base/SFT DiT、Qwen3.5-9B 文本编码器、FLUX.2 VAE。
 2. 官方分片权重选择第一个 `.safetensors`，其余分片放在同一目录；也可使用上游支持的 ComfyUI 单文件。Qwen W4A8 GPTQ 文件不受支持。
 3. 填写数据集与输出位置，bucket 步长须为 16 的倍数。默认 DiT-only、bf16、latent 缓存与文本输出缓存；以界面中的当前默认值和校验结果为准。
-4. 训练文本编码器时关闭“仅训练 DiT”及两项文本缓存。文本编码器使用 bf16，VAE 使用 fp32；不要使用通用 `fp8_base`，量化路径为 ConvRot INT8。显卡总显存不足 20 GiB 时，程序会把 Qwen3.5-9B 文本编码器留在 CPU 上缓存，不再搬到 GPU；速度会慢一些，结果不变。
-5. H2D-only block swap 需要 gradient checkpointing 与启用的 block swap；不同配置的显存与速度需实际测量。
-6. 预览并检查配置后启动训练。配置导出与运行时校验是两步；导出成功不能证明当前依赖和 GPU 可运行。
+4. 训练文本编码器时关闭“仅训练 DiT”及两项文本缓存。文本编码器使用 bf16，VAE 使用 fp32；不要使用通用 `fp8_base`，量化路径为 ConvRot INT8。显卡总显存不足 20 GiB 时，程序会把 Qwen3.5-9B 文本编码器留在 CPU 上缓存，不再搬到 GPU；速度会慢一些，结果不变。16 GB 显卡也按这个方式工作。
+5. 如果设置页显示“没有检测到显卡”，先在启动窗口确认当前 Python 是否装了 CUDA 版 PyTorch；直接 `pip install -r requirements.txt` 不会安装 CUDA 版 torch，请改用 `scripts\install-cn.ps1` 或 `scripts\install.ps1`。
+6. H2D-only block swap 需要 gradient checkpointing 与启用的 block swap；不同配置的显存与速度需实际测量。
+7. 预览并检查配置后启动训练。配置导出与运行时校验是两步；导出成功不能证明当前依赖和 GPU 可运行。
 
 多行/多候选 Caption 使用上游支持的分隔行 `---===---`；在当前训练器参数中启用对应选项。MOSS-Image 可缓存全部候选文本输出，候选越多，首次编码和缓存开销越大。
 
