@@ -19,6 +19,10 @@
    - 根目录新增 `run_gui.bat`：优先使用 `venv` 或便携版 `python`，都找不到时提示先运行安装脚本。
    - 提交构建好的 `frontend/dist`；从 GitHub 下载源码后不需要再装 Node.js 构建前端。
 
+4. 模型选择器支持本机任意目录
+   - `mikazuki/storage/files.py` 新增 `local` 浏览根，允许文件选择器读取仓库目录之外的本地模型文件夹。
+   - `frontend/src/components/ParamControl.vue` 与 `FilePicker.vue` 的模型路径改用本地根，并允许从当前目录一直向上浏览到盘符根。
+
 ## 使用提示
 
 - 模型文件不需要复制到仓库里：模型选择框可以浏览本机任意文件夹，也可以直接在路径输入框中填写绝对路径。`models/` 只是默认占位目录，不包含模型权重。
