@@ -261,8 +261,24 @@ class MossImageNetworkTrainer(train_network.NetworkTrainer):
                 vae.to("cpu")
                 clean_memory_on_device(accelerator.device)
 
-            logger.info("move text encoder to gpu")
-            text_encoders[0].to(accelerator.device)
+            # The text encoder (Qwen3.5-9B, bf16 ~18GB) does not fit on small GPUs. The encoding strategy follows the
+            # model's own device (`next(text_encoder.parameters()).device`), so keeping it on CPU only changes speed,
+            # not the cached values. Below ~20GB VRAM it is cached on CPU instead of OOM-ing.
+            te_on_gpu = True
+            if torch.cuda.is_available():
+                try:
+                    total_vram = torch.cuda.mem_get_info()[1]
+                    te_on_gpu = total_vram >= 20 * 1024**3
+                except Exception:
+                    te_on_gpu = True
+            if te_on_gpu:
+                logger.info("move text encoder to gpu")
+                text_encoders[0].to(accelerator.device)
+            else:
+                logger.info(
+                    f"only {torch.cuda.mem_get_info()[1] / 1024**3:.1f}GB VRAM detected: caching text encoder outputs on CPU"
+                    " (slower, identical results)"
+                )
 
             # no autocast: the text encoder is bf16 and the official pipeline runs it in bf16
             dataset.new_cache_text_encoder_outputs(text_encoders, accelerator)
