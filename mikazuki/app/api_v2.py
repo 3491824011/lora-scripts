@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import toml
 from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
@@ -118,6 +119,7 @@ async def import_draft(payload: ImportDraftRequest):
         raise HTTPException(status_code=404, detail="trainer not found")
 
     text = payload.toml
+    source: Optional[Path] = None
     if not text and payload.path:
         source = Path(payload.path).expanduser()
         if source.suffix.lower() not in {".toml", ".txt"}:
@@ -131,11 +133,29 @@ async def import_draft(payload: ImportDraftRequest):
     if not text or not text.strip():
         raise HTTPException(status_code=400, detail="toml is empty")
 
+    dataset_text = payload.datasetToml
+    if not dataset_text and source is not None:
+        try:
+            config = toml.loads(text)
+            dataset_config = config.get("dataset", {}).get("dataset_config")
+            if isinstance(dataset_config, str) and dataset_config.strip():
+                reference = Path(dataset_config).expanduser()
+                if not reference.is_absolute():
+                    reference = source.parent / reference
+                if reference.is_file() and reference.stat().st_size <= 4 * 1024 * 1024:
+                    dataset_text = await asyncio.to_thread(
+                        reference.read_text, encoding="utf-8", errors="replace"
+                    )
+        except Exception:
+            # 数据集配置只是可选增强；主 train.toml 的解析结果仍然可用。
+            dataset_text = payload.datasetToml
+
     result = import_train_toml(
         trainer,
         text,
         manifest_hash=catalog.manifest_hash,
         base_name=payload.name or "",
+        dataset_text=dataset_text,
     )
     return result.model_dump(exclude_none=True)
 

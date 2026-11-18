@@ -110,6 +110,7 @@ def import_train_toml(
     *,
     manifest_hash: str = "",
     base_name: str = "",
+    dataset_text: Optional[str] = None,
 ) -> ImportResult:
     try:
         payload = parse_train_toml(text)
@@ -150,13 +151,46 @@ def import_train_toml(
     dataset: Dict[str, Any] = {}
     name = ""
 
+    dataset_payload: Optional[Dict[str, Any]] = None
+    if dataset_text and not payload.get("datasets"):
+        try:
+            parsed_dataset = parse_train_toml(dataset_text)
+        except Exception as exc:
+            errors.append(
+                ValidationMessage(
+                    severity="error",
+                    code="import.dataset.invalid",
+                    field="datasetToml",
+                    message=f"数据集 TOML 解析失败：{exc}",
+                )
+            )
+        else:
+            if isinstance(parsed_dataset, dict):
+                dataset_payload = parsed_dataset
+            else:
+                errors.append(
+                    ValidationMessage(
+                        severity="error",
+                        code="import.dataset.invalid",
+                        field="datasetToml",
+                        message="数据集 TOML 根节点必须是表。",
+                    )
+                )
+
     # ---- 数据集表：[[datasets]] / [datasets] 两种写法都认 ----
-    dataset_table, subset_table, dataset_notes = _extract_dataset_tables(payload, mappings)
+    dataset_table, subset_table, dataset_notes = _extract_dataset_tables(
+        dataset_payload if dataset_payload is not None else payload, mappings
+    )
     for note in dataset_notes:
         warnings.append(note)
 
-    general_table = payload.get("general")
-    if isinstance(general_table, dict):
+    general_tables: List[Dict[str, Any]] = []
+    if isinstance(payload.get("general"), dict):
+        general_tables.append(payload["general"])
+    if dataset_payload is not None and isinstance(dataset_payload.get("general"), dict):
+        general_tables.append(dataset_payload["general"])
+
+    for general_table in general_tables:
         for key, value in general_table.items():
             target = DATASET_KEY_MAP.get(key)
             if target is None:

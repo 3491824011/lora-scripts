@@ -117,6 +117,7 @@ class ImportDraftRequest(BaseModel):
     trainerId: str
     toml: Optional[str] = None
     path: Optional[str] = None
+    datasetToml: Optional[str] = None
     name: Optional[str] = None
 
 

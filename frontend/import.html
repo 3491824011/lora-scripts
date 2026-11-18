@@ -115,6 +115,11 @@
       <span class="muted">也可以直接粘贴到下面</span>
     </div>
     <div class="row">
+      <label class="f" for="datasetFile">数据集配置（可选）</label>
+      <input type="file" id="datasetFile" accept=".toml,.txt" />
+      <span class="muted">train.toml 里 dataset_config 指向单独文件时，在这里补选</span>
+    </div>
+    <div class="row">
       <textarea id="toml" spellcheck="false" placeholder="pretrained_model_name_or_path = &quot;...&quot;&#10;network_dim = 32&#10;...&#10;&#10;[general]&#10;caption_extension = &quot;.txt&quot;&#10;&#10;[[datasets]]&#10;resolution = [1024, 1024]&#10;..."></textarea>
     </div>
     <div class="row">
@@ -153,6 +158,7 @@ const DRAFTS_KEY = 'ls-v2-drafts';
 const SELECTED_KEY = 'ls-v2-selected-trainer';
 const $ = (id) => document.getElementById(id);
 let lastResult = null;
+let datasetToml = null;
 
 function readDrafts() {
   try {
@@ -204,10 +210,17 @@ $('file').addEventListener('change', async (e) => {
   }
 });
 
+$('datasetFile').addEventListener('change', async (e) => {
+  const f = e.target.files && e.target.files[0];
+  datasetToml = f ? await f.text() : null;
+});
+
 $('clear').addEventListener('click', () => {
   $('toml').value = '';
   $('name').value = '';
   $('file').value = '';
+  $('datasetFile').value = '';
+  datasetToml = null;
   $('resultCard').classList.add('hidden');
   lastResult = null;
   setStatus('');
@@ -225,7 +238,7 @@ $('parse').addEventListener('click', async () => {
     const res = await fetch('/api/v2/drafts/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ trainerId, toml: text, name: $('name').value || null }),
+      body: JSON.stringify({ trainerId, toml: text, datasetToml, name: $('name').value || null }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || res.statusText);
