@@ -31,7 +31,7 @@ const bucketRangeValid = computed(
   <div class="dataset-editor">
     <div class="config-block">
       <div class="form-grid">
-        <ParameterHelp class="field field-wide" content="包含训练图片与同名 Caption 文件的目录。启动时会检查目录中是否有可用图片。" label="图片目录说明">
+        <ParameterHelp class="field field-wide" content="包含训练图片与同名 Caption 文件的目录。如果目录本身没有图片，但下面有 10_角色、6_身体 这样的子目录，会自动识别为多个子集，并沿用目录名前缀作为重复次数。" label="图片目录说明">
           <span class="field-label">
             <label for="dataset-path">图片目录 <em>必填</em></label>
           </span>

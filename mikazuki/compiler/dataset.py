@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -43,6 +44,7 @@ def build_simple_dataset(
         ]
     errors: List[ValidationMessage] = []
     root = _resolve_path(dataset.root, base_dir)
+    subsets: List[Dict[str, Any]] = []
 
     if root is None:
         errors.append(
@@ -72,18 +74,29 @@ def build_simple_dataset(
                     message=f"数据集路径必须是目录：{_display_path(root)}",
                 )
             )
-        elif not any(p.suffix.lower() in IMAGE_EXTENSIONS for p in root.iterdir() if p.is_file()):
-            errors.append(
-                ValidationMessage(
-                    severity="error",
-                    code="dataset.images.empty",
-                    field="dataset.root",
-                    message=(
-                        f"数据集目录当前层没有支持的图片文件：{_display_path(root)}。"
-                        "simple 模式不会递归训练子目录，请选择直接包含图片的目录。"
-                    ),
+        else:
+            subsets = _collect_dataset_subsets(root, dataset.numRepeats)
+            if not subsets:
+                errors.append(
+                    ValidationMessage(
+                        severity="error",
+                        code="dataset.images.empty",
+                        field="dataset.root",
+                        message=(
+                            f"数据集目录当前层没有支持的图片文件：{_display_path(root)}。"
+                            "也没有找到形如 10_角色、6_身体 的子目录。"
+                            "请选择直接包含图片的目录，或选择包含 N_名称 子目录的父目录。"
+                        ),
+                    )
                 )
-            )
+
+    if not subsets:
+        subsets = [
+            {
+                "image_dir": _display_path(root) if root is not None else "",
+                "num_repeats": dataset.numRepeats,
+            }
+        ]
 
     try:
         resolution = normalize_resolution(dataset.resolution)
@@ -163,16 +176,51 @@ def build_simple_dataset(
                 "max_bucket_reso": dataset.maxBucketReso,
                 "bucket_reso_steps": dataset.bucketResoSteps,
                 "bucket_no_upscale": dataset.bucketNoUpscale,
-                "subsets": [
-                    {
-                        "image_dir": _display_path(root) if root is not None else "",
-                        "num_repeats": dataset.numRepeats,
-                    }
-                ],
+                "subsets": subsets,
             }
         ],
     }
     return config, errors
+
+
+def _collect_dataset_subsets(root: Path, default_repeats: int) -> List[Dict[str, Any]]:
+    if _has_image_files(root):
+        return [{"image_dir": _display_path(root), "num_repeats": default_repeats}]
+
+    try:
+        children = sorted(root.iterdir(), key=lambda path: path.name.lower())
+    except OSError:
+        return []
+
+    numeric: List[Tuple[int, str, Path]] = []
+    fallback: List[Tuple[int, str, Path]] = []
+    for child in children:
+        if not child.is_dir() or not _has_image_files(child):
+            continue
+        match = re.match(r"^(\d+)_", child.name)
+        if match:
+            repeats = int(match.group(1))
+            if repeats > 0:
+                numeric.append((repeats, child.name.lower(), child))
+        else:
+            fallback.append((default_repeats, child.name.lower(), child))
+
+    candidates = sorted(numeric) if numeric else sorted(fallback)
+    return [
+        {"image_dir": _display_path(path), "num_repeats": repeats}
+        for repeats, _, path in candidates
+    ]
+
+
+def _has_image_files(directory: Path) -> bool:
+    try:
+        return any(
+            path.suffix.lower() in IMAGE_EXTENSIONS
+            for path in directory.iterdir()
+            if path.is_file()
+        )
+    except OSError:
+        return False
 
 
 def _resolve_path(value: Optional[str], base_dir: Optional[Path]) -> Optional[Path]:

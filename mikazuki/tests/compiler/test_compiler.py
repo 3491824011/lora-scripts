@@ -30,33 +30,54 @@ def flatten_toml(content: str) -> dict:
 
 
 class CompilerParameterChainTests(unittest.TestCase):
-    def test_simple_dataset_requires_images_directly_in_selected_directory(self) -> None:
+    def test_simple_dataset_expands_numeric_subdirectories(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            nested = root / "dataset" / "10_subject"
-            nested.mkdir(parents=True)
-            (nested / "image.png").write_bytes(b"enough-for-path-validation")
+            dataset = root / "dataset"
+            for name in ("4_full", "6_upper", "10_face"):
+                nested = dataset / name
+                nested.mkdir(parents=True)
+                (nested / "image.png").write_bytes(b"enough-for-path-validation")
 
-            parent_result = compile_draft(
+            result = compile_draft(
                 make_draft(dataset={"mode": "simple", "root": "dataset"}),
-                persist=True,
-                validate_paths=True,
-                base_dir=root,
-            )
-            nested_result = compile_draft(
-                make_draft(dataset={"mode": "simple", "root": "dataset/10_subject", "numRepeats": 3}),
                 persist=False,
                 validate_paths=True,
                 base_dir=root,
             )
 
-            self.assertIn("dataset.images.empty", {error.code for error in parent_result.errors})
-            self.assertIn("不会递归", parent_result.errors[0].message)
-            self.assertFalse((root / "config" / "runs").exists())
+            self.assertEqual(result.errors, [])
+            subsets = toml.loads(result.datasetConfig)["datasets"][0]["subsets"]
+            self.assertEqual(
+                {Path(subset["image_dir"]).name: subset["num_repeats"] for subset in subsets},
+                {"4_full": 4, "6_upper": 6, "10_face": 10},
+            )
+
+            nested_result = compile_draft(
+                make_draft(dataset={"mode": "simple", "root": "dataset/10_face", "numRepeats": 3}),
+                persist=False,
+                validate_paths=True,
+                base_dir=root,
+            )
             self.assertEqual(nested_result.errors, [])
             subset = toml.loads(nested_result.datasetConfig)["datasets"][0]["subsets"][0]
-            self.assertEqual(subset["image_dir"], str(nested.resolve()).replace("\\", "/"))
+            self.assertEqual(subset["image_dir"], str((dataset / "10_face").resolve()).replace("\\", "/"))
             self.assertEqual(subset["num_repeats"], 3)
+
+    def test_simple_dataset_reports_missing_images_when_no_subsets_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "dataset").mkdir()
+
+            result = compile_draft(
+                make_draft(dataset={"mode": "simple", "root": "dataset"}),
+                persist=False,
+                validate_paths=True,
+                base_dir=root,
+            )
+
+            self.assertEqual([error.code for error in result.errors], ["dataset.images.empty"])
+            self.assertIn("N_名称", result.errors[0].message)
 
     def test_partial_dataset_uses_the_selected_trainer_defaults(self) -> None:
         result = compile_draft(

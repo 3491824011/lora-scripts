@@ -6,7 +6,7 @@
 
 文件浏览 `GET /api/v2/files?root=train&kind=dataset`；`train` 和 `datasets` 都映射仓库的 `train/`。`workspace` 映射仓库根，`models` 映射 `models/`，`output`/`outputs` 映射 `output/`。路径必须留在所选 root 内，不通过 `..` 或符号链接绕过范围。
 
-一个 simple 数据集的图片必须直接放在 `dataset.root` 目录，使用同名文本 sidecar：`001.png` 对应 `001.txt`。训练 simple 模式只加载这一层图片，不递归加载子目录；不要传入旧式 `N_name` 数据子目录的父目录，重复次数用 `numRepeats` 显式设置。训练 simple 编译器与 Caption 扫描支持 `.jpg/.jpeg/.png/.webp/.bmp`；通用文件浏览还能显示 GIF/AVIF，不表示 Caption 或训练支持这些格式。
+一个 simple 数据集的图片可以放在 `dataset.root` 当前层，使用同名文本 sidecar：`001.png` 对应 `001.txt`，重复次数用 `numRepeats` 设置。如果当前层没有图片，编译器会检查一级子目录：`10_角色`、`6_身体` 这类 `N_名称` 子目录会分别生成 subsets，前缀数字就是各自的 `num_repeats`；没有数字前缀但直接包含图片的子目录则使用 `numRepeats`。训练 simple 编译器与 Caption 扫描支持 `.jpg/.jpeg/.png/.webp/.bmp`；通用文件浏览还能显示 GIF/AVIF，不表示 Caption 或训练支持这些格式。
 
 扫描 Caption 数据集：
 

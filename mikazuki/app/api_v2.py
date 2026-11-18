@@ -96,8 +96,10 @@ async def get_training_schema():
     dataset_schema = SimpleDatasetDraft.model_json_schema()
     dataset_schema["properties"]["mode"]["enum"] = ["simple"]
     dataset_schema["properties"]["root"]["description"] = (
-        "Directory on the backend machine directly containing the training images and caption sidecars. "
-        "Simple mode does not recursively train images in subdirectories."
+        "Directory on the backend machine containing the training images and caption sidecars. "
+        "If it directly contains images, they are used as one subset. Otherwise, immediate "
+        "child folders named like 10_subject are used as separate subsets, and the leading "
+        "number is used as num_repeats."
     )
     definitions = schema.setdefault("$defs", {})
     definitions.update(dataset_schema.pop("$defs", {}))

@@ -27,8 +27,8 @@ class TrainingSchemaApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(dataset["mode"]["enum"], ["simple"])
         self.assertEqual(dataset["captionExtension"]["default"], ".txt")
         self.assertEqual(dataset["numRepeats"]["default"], 1)
-        self.assertIn("directly containing", dataset["root"]["description"])
-        self.assertIn("does not recursively", dataset["root"]["description"])
+        self.assertIn("directly contains", dataset["root"]["description"])
+        self.assertIn("child folders", dataset["root"]["description"])
         self.assertIn("batchSize", dataset)
         self.assertIn("resolution", dataset)
 
