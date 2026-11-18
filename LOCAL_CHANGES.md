@@ -5,8 +5,9 @@
 ## 相对上游的改动
 
 1. `scripts/dev/moss_image_train_network.py`
-   - 缓存文本编码器输出前检测显存总量。
-   - 显存小于 20 GiB 时，Qwen3.5-9B 文本编码器保留在 CPU，避免小显存显卡 OOM；结果一致，只是速度更慢。
+   - 保持上游行为：缓存文本编码器输出时优先把 Qwen3.5-9B 文本编码器放到 GPU。
+   - GPU 放不下（`torch.cuda.OutOfMemoryError`）时不再静默改用 CPU，而是抛出明确错误，提示开启「低显存保护」或改用 ConvRot INT8 文本编码器。
+   - 新增 `--vram_guard` / `--vram_guard_threshold_gb`：默认关闭，行为与上游一致；开启后仅在显卡总显存低于阈值时把文本编码器留在 CPU 缓存输出，结果一致，只是速度更慢。
 
 2. 训练配置导入 / 保存
    - 新增 `mikazuki/compiler/importer.py`：解析 sd-scripts 的 `train.toml`，映射到工作台草稿参数并返回逐键状态。

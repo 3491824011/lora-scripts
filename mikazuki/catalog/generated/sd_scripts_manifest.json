@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-01T07:40:43.671108+00:00",
+  "generatedAt": "2026-11-18T18:33:09.484532+00:00",
   "scriptsRoot": "scripts/dev",
   "sharedParams": {},
   "trainers": {
@@ -38910,6 +38910,44 @@
             "function": "setup_parser"
           }
         },
+        "vram_guard": {
+          "name": "vram_guard",
+          "flags": [
+            "--vram_guard"
+          ],
+          "type": "boolean",
+          "itemType": null,
+          "default": false,
+          "choices": null,
+          "nargs": 0,
+          "action": "store_true",
+          "required": false,
+          "help": "Keep the Qwen3.5-9B text encoder on the CPU while caching its outputs when the total VRAM is below --vram_guard_threshold_gb. Off by default: the text encoder is always placed on the GPU (upstream behavior) / テキストエンコーダ出力のキャッシュ時、総 VRAM が --vram_guard_threshold_gb 未満なら CPU に置く。デフォルトはオフで、常に GPU を使う（上流と同じ動作）",
+          "source": {
+            "script": "scripts/dev/moss_image_train_network.py",
+            "module": "moss_image_train_network",
+            "function": "setup_parser"
+          }
+        },
+        "vram_guard_threshold_gb": {
+          "name": "vram_guard_threshold_gb",
+          "flags": [
+            "--vram_guard_threshold_gb"
+          ],
+          "type": "number",
+          "itemType": null,
+          "default": 20.0,
+          "choices": null,
+          "nargs": null,
+          "action": "store",
+          "required": false,
+          "help": "VRAM threshold in GiB for --vram_guard (default: 20). Ignored when --vram_guard is not set / --vram_guard のしきい値（GiB、デフォルト: 20）。--vram_guard がない場合は無視される",
+          "source": {
+            "script": "scripts/dev/moss_image_train_network.py",
+            "module": "moss_image_train_network",
+            "function": "setup_parser"
+          }
+        },
         "discrete_flow_shift": {
           "name": "discrete_flow_shift",
           "flags": [
@@ -39234,5 +39272,5 @@
     ],
     "localPatches": []
   },
-  "manifestHash": "b0eb46f4c4c58f431d250db2737f2c99a41ed08bfc43522f58a9252d9c012111"
+  "manifestHash": "df496f67bfdfe0caa23968feedc585125a1ec4a61e79b6f03c5c6355c6481e43"
 }

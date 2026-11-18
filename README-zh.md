@@ -23,9 +23,11 @@ LoRA-scripts（SD-Trainer）是基于 [kohya-ss/sd-scripts](https://github.com/k
 
 ### 小显存跑 MOSS-Image
 
-MOSS-Image 的 Qwen3.5-9B 文本编码器比较占显存。现在程序会先看一下显卡的总显存，小于 20 GiB 时把文本编码器留在 CPU 上缓存，显存够才搬到 GPU。速度会慢一点，结果是一样的，显存不到 20 GiB 的卡也能先跑起来。
+MOSS-Image 的 Qwen3.5-9B 文本编码器使用 ConvRot INT8，约占 9 GB 显存，16 GB 显卡可以直接放在 GPU 上缓存。程序默认与原项目一致：**文本编码器始终优先放到 GPU，不会因为显存总量被提前切到 CPU**。
 
-如果设置页提示没有检测到显卡，或者提示当前 Python 没有 CUDA 版 PyTorch，先看启动窗口的提示。常见情况是当前 Python 装的是 CPU 版 PyTorch，先运行 `scripts\setup-windows.bat`（会自动下载 Python 3.11 和 CUDA 依赖），或重新运行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装 CUDA 版依赖即可。16 GB 显卡只要 PyTorch 能正常识别到 CUDA，就会按上面的低显存方式工作。
+如果显卡确实放不下（例如 8 GB 显存配 BF16 文本编码器），训练会在启动时明确报错，而不是悄悄用 CPU 慢慢跑。此时在训练页的「显存」分组里打开 **低显存保护**，并把 **低显存保护阈值 (GB)** 设成你的显存容量（默认 20），程序才会在显存低于阈值时改用 CPU 缓存文本编码器。回退只影响速度，缓存结果不变。
+
+如果设置页提示没有检测到显卡，或者提示当前 Python 没有 CUDA 版 PyTorch，先看启动窗口的提示。常见情况是当前 Python 装的是 CPU 版 PyTorch，先运行 `scripts\setup-windows.bat`（会自动下载 Python 3.11 和 CUDA 依赖），或重新运行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装 CUDA 版依赖即可。
 
 模型文件不用复制进仓库：模型选择框可以直接浏览本机任意文件夹，也可以在路径输入框里填绝对路径。数据集默认放在 `train/`；这两个目录里的占位文件只是为了让空目录能保留在仓库里，里面没有模型或图片。
 

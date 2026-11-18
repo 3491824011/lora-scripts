@@ -94,6 +94,21 @@ def add_moss_image_training_arguments(parser: argparse.ArgumentParser):
     """MOSS-Image specific training arguments (timestep sampling, attention, compile, sampling, checkpointing)."""
     add_convrot_int8_arguments(parser)
     parser.add_argument(
+        "--vram_guard",
+        action="store_true",
+        help="Keep the Qwen3.5-9B text encoder on the CPU while caching its outputs when the total VRAM is below"
+        " --vram_guard_threshold_gb. Off by default: the text encoder is always placed on the GPU (upstream behavior)"
+        " / テキストエンコーダ出力のキャッシュ時、総 VRAM が --vram_guard_threshold_gb 未満なら CPU に置く。"
+        "デフォルトはオフで、常に GPU を使う（上流と同じ動作）",
+    )
+    parser.add_argument(
+        "--vram_guard_threshold_gb",
+        type=float,
+        default=20.0,
+        help="VRAM threshold in GiB for --vram_guard (default: 20). Ignored when --vram_guard is not set"
+        " / --vram_guard のしきい値（GiB、デフォルト: 20）。--vram_guard がない場合は無視される",
+    )
+    parser.add_argument(
         "--discrete_flow_shift",
         type=float,
         default=1.0,

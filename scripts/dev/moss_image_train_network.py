@@ -261,24 +261,34 @@ class MossImageNetworkTrainer(train_network.NetworkTrainer):
                 vae.to("cpu")
                 clean_memory_on_device(accelerator.device)
 
-            # The text encoder (Qwen3.5-9B, bf16 ~18GB) does not fit on small GPUs. The encoding strategy follows the
-            # model's own device (`next(text_encoder.parameters()).device`), so keeping it on CPU only changes speed,
-            # not the cached values. Below ~20GB VRAM it is cached on CPU instead of OOM-ing.
-            te_on_gpu = True
-            if torch.cuda.is_available():
+            # Upstream behavior: always place the text encoder on the GPU. The optional VRAM guard (off by default)
+            # keeps it on the CPU only when the user explicitly enables it and the card is below the threshold.
+            # The encoding strategy follows the model's device, so the cached values are identical either way.
+            use_cpu_cache = False
+            total_vram_gb = 0.0
+            threshold_gb = float(getattr(args, "vram_guard_threshold_gb", 20.0) or 20.0)
+            if getattr(args, "vram_guard", False) and torch.cuda.is_available():
                 try:
-                    total_vram = torch.cuda.mem_get_info()[1]
-                    te_on_gpu = total_vram >= 20 * 1024**3
+                    total_vram_gb = torch.cuda.mem_get_info()[1] / 1024**3
+                    use_cpu_cache = total_vram_gb < threshold_gb
                 except Exception:
-                    te_on_gpu = True
-            if te_on_gpu:
-                logger.info("move text encoder to gpu")
-                text_encoders[0].to(accelerator.device)
-            else:
+                    use_cpu_cache = False
+
+            if use_cpu_cache:
                 logger.info(
-                    f"only {torch.cuda.mem_get_info()[1] / 1024**3:.1f}GB VRAM detected: caching text encoder outputs on CPU"
-                    " (slower, identical results)"
+                    f"VRAM guard enabled: {total_vram_gb:.1f}GB < {threshold_gb:.1f}GB,"
+                    " caching text encoder outputs on CPU (slower, identical results)"
                 )
+            else:
+                logger.info("move text encoder to gpu")
+                try:
+                    text_encoders[0].to(accelerator.device)
+                except torch.cuda.OutOfMemoryError:
+                    raise RuntimeError(
+                        "not enough VRAM to place the Qwen3.5-9B text encoder on the GPU."
+                        " Enable '低显存保护' (--vram_guard) to cache its outputs on the CPU instead,"
+                        " or use the ConvRot INT8 text encoder."
+                    ) from None
 
             # no autocast: the text encoder is bf16 and the official pipeline runs it in bf16
             dataset.new_cache_text_encoder_outputs(text_encoders, accelerator)

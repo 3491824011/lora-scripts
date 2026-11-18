@@ -144,3 +144,14 @@ class MossImageCompilerTests(unittest.TestCase):
         })
         self.assertEqual(result.errors, [])
         self.assertEqual(result.samplePrompts, "A cat\\non a table --n blur\\nnoise\n")
+
+    def test_vram_guard_is_off_by_default_and_serialized_when_enabled(self):
+        default = flatten_toml(compile_moss().trainConfig)
+        self.assertNotIn("vram_guard", default)
+        self.assertNotIn("vram_guard_threshold_gb", default)
+
+        enabled = compile_moss(params={"vram_guard": True, "vram_guard_threshold_gb": 12.5})
+        self.assertEqual(enabled.errors, [])
+        config = flatten_toml(enabled.trainConfig)
+        self.assertTrue(config["vram_guard"])
+        self.assertEqual(config["vram_guard_threshold_gb"], 12.5)

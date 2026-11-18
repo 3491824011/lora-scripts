@@ -88,6 +88,21 @@ params:
     group: memory
     priority: recommended
     control: switch
+  vram_guard:
+    label: 低显存保护
+    description: 默认关闭，文本编码器始终优先放到 GPU（与原项目一致）。开启后，只有显卡总显存低于下面的阈值时，才把 Qwen3.5-9B 文本编码器留在 CPU 上缓存输出；结果一致，只是速度更慢。
+    group: memory
+    priority: recommended
+    control: switch
+  vram_guard_threshold_gb:
+    label: 低显存保护阈值 (GB)
+    description: 仅在开启「低显存保护」时生效。显卡总显存低于该值时改用 CPU 缓存文本编码器，默认 20 GB。16 GB 显卡使用 ConvRot INT8 文本编码器时约占用 9 GB，不需要开启。
+    group: memory
+    priority: recommended
+    control: number
+    min: 1
+    max: 256
+    step: 0.5
   convrot_int8_bwd:
     label: ConvRot INT8 反向计算
     description: 默认 BF16 以临时反量化计算梯度；INT8 可提速但会量化梯度，要求 CUDA 和兼容的 Triton，仅在使用 ConvRot INT8 权重时生效。
