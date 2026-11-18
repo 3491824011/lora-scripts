@@ -26,6 +26,7 @@ config/app-settings.json*
 
 !models/put stable diffusion model here.txt
 !logs/.keep
+!train/.keep
 
 temp/
 

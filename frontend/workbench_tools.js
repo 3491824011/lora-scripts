@@ -174,7 +174,8 @@
       toast('读取文件失败：' + file.name, 'error');
     };
     reader.onload = function () {
-      postJson(IMPORT_URL, { trainerId: trainerId, toml: String(reader.result || '') })
+      var baseName = file.name.replace(/\.(toml|txt)$/i, '');
+      postJson(IMPORT_URL, { trainerId: trainerId, toml: String(reader.result || ''), name: baseName })
         .then(function (result) {
           var data = result.data || {};
           if (!result.ok) {
