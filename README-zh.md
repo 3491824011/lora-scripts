@@ -2,6 +2,10 @@
 
 LoRA-scripts（SD-Trainer）是基于 [kohya-ss/sd-scripts](https://github.com/kohya-ss/sd-scripts) 的本地训练与数据集工作台。v2 界面集成训练配置、Caption 生成、人工标签编辑、任务日志和训练指标。
 
+> **下载注意**
+>
+> 这里提供的是源码，不是免安装便携包。Windows 上第一次运行前，请先执行 `scripts\install-cn.ps1`（或 `scripts\install.ps1`）安装依赖，装好后再双击根目录的 `run_gui.bat`。如果希望下载后无需安装即可使用，请用 `.github/scripts/build-windows-portable.ps1` 打便携包。
+
 [English](README.md) · [人类操作指南](docs/human/README.md) · [MCP 接入](docs/human/mcp.md) · [Agent 使用文档](docs/agent/usage/README.md) · [Agent 开发文档](docs/agent/dev/README.md)
 
 
