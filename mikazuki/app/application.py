@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 
@@ -21,14 +21,39 @@ mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
 FRONTEND_DIST = app_root() / "frontend" / "dist"
 FAVICON = app_root() / "assets" / "favicon.ico"
+INDEX_HTML = FRONTEND_DIST / "index.html"
+# 配置导入/保存脚本放在 frontend/ 下而不是 dist/ 里，前端整目录升级不会把它删掉。
+TOOLS_SCRIPT = app_root() / "frontend" / "workbench_tools.js"
+TOOLS_SCRIPT_URL = "/__workbench_tools.js"
+TOOLS_SCRIPT_TAG = f'<script src="{TOOLS_SCRIPT_URL}" defer></script>'
+
+
+def render_index() -> HTMLResponse | None:
+    """返回注入了工作台工具脚本的 index.html；文件缺失时返回 None。"""
+    if not INDEX_HTML.exists():
+        return None
+    html = INDEX_HTML.read_text(encoding="utf-8", errors="replace")
+    if TOOLS_SCRIPT.exists() and TOOLS_SCRIPT_TAG not in html:
+        if "</body>" in html:
+            html = html.replace("</body>", f"{TOOLS_SCRIPT_TAG}\n</body>", 1)
+        else:
+            html = f"{html}\n{TOOLS_SCRIPT_TAG}\n"
+    return HTMLResponse(html)
 
 
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
+        if path in ("", ".", "./", "index.html", "./index.html"):
+            page = render_index()
+            if page is not None:
+                return page
         try:
             return await super().get_response(path, scope)
         except HTTPException as ex:
             if ex.status_code == 404:
+                page = render_index()
+                if page is not None:
+                    return page
                 return await super().get_response("index.html", scope)
             else:
                 raise ex
@@ -77,18 +102,35 @@ app.mount("/mcp", app.state.mcp_service, name="mcp")
 
 @app.get("/")
 async def index():
-    index_file = FRONTEND_DIST / "index.html"
-    if not index_file.exists():
-        return JSONResponse(
-            status_code=503,
-            content={"status": "frontend_not_built", "message": "frontend/dist/index.html does not exist"},
-        )
-    return FileResponse(index_file)
+    page = render_index()
+    if page is not None:
+        return page
+    return JSONResponse(
+        status_code=503,
+        content={"status": "frontend_not_built", "message": "frontend/dist/index.html does not exist"},
+    )
 
 
 @app.get("/favicon.ico", response_class=FileResponse)
 async def favicon():
     return FileResponse(FAVICON)
+
+
+@app.get("/import", response_class=FileResponse)
+async def import_page():
+    """参数导入页：独立于前端构建产物，前端升级不会覆盖。"""
+    page = app_root() / "frontend" / "import.html"
+    if not page.exists():
+        return JSONResponse(status_code=404, content={"detail": "import.html not found"})
+    return FileResponse(page)
+
+
+@app.get(TOOLS_SCRIPT_URL)
+async def workbench_tools_script():
+    """工作台左下角的配置导入/保存脚本。"""
+    if not TOOLS_SCRIPT.exists():
+        return JSONResponse(status_code=404, content={"detail": "workbench_tools.js not found"})
+    return FileResponse(TOOLS_SCRIPT, media_type="application/javascript", headers={"Cache-Control": "no-cache"})
 
 if FRONTEND_DIST.exists():
     app.mount("/", SPAStaticFiles(directory=str(FRONTEND_DIST), html=True), name="static")

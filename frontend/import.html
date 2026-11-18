@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>导入训练参数 · 训练工作台</title>
+<style>
+  :root {
+    --bg: #f2f3f5;
+    --panel: #ffffff;
+    --border: #dcdfe6;
+    --text: #303133;
+    --text-2: #606266;
+    --text-3: #909399;
+    --primary: #409eff;
+    --primary-weak: #ecf5ff;
+    --ok: #67c23a;
+    --ok-weak: #f0f9eb;
+    --warn: #e6a23c;
+    --warn-weak: #fdf6ec;
+    --err: #f56c6c;
+    --err-weak: #fef0f0;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Cascadia Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141414; --panel: #1d1e1f; --border: #414243;
+      --text: #e5eaf3; --text-2: #cfd3dc; --text-3: #a3a6ad;
+      --primary-weak: #18222c; --ok-weak: #1c2518; --warn-weak: #292218; --err-weak: #2b1d1d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: var(--bg); color: var(--text);
+    font: 14px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  header .hint { color: var(--text-3); font-size: 13px; }
+  header a { margin-left: auto; color: var(--primary); text-decoration: none; font-size: 13px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .card h2 { font-size: 14px; margin: 0 0 12px; font-weight: 600; color: var(--text-2); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .row + .row { margin-top: 10px; }
+  label.f { color: var(--text-2); font-size: 13px; }
+  select, textarea, button, input[type=text] {
+    font: inherit; color: inherit; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+  }
+  select, input[type=text] { min-width: 220px; }
+  textarea {
+    width: 100%; min-height: 240px; resize: vertical; font-family: var(--mono);
+    font-size: 12.5px; line-height: 1.55; tab-size: 2;
+  }
+  button { cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+  }
+  button.primary:hover:not(:disabled) { background: #66b1ff; color: #fff; }
+  .grow { flex: 1 1 auto; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat {
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px;
+    font-size: 13px; color: var(--text-2);
+  }
+  .stat b { font-size: 16px; margin-right: 4px; }
+  .stat.mapped b { color: var(--ok); }
+  .stat.skipped b { color: var(--warn); }
+  .stat.unknown b { color: var(--err); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-3); font-weight: 500; font-size: 12.5px; position: sticky; top: 0; background: var(--panel); }
+  td.k { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  td.v { font-family: var(--mono); font-size: 12.5px; color: var(--text-2); word-break: break-all; max-width: 420px; }
+  .tag {
+    display: inline-block; padding: 0 8px; border-radius: 10px; font-size: 12px;
+    line-height: 20px; white-space: nowrap;
+  }
+  .tag.mapped { background: var(--ok-weak); color: var(--ok); }
+  .tag.skipped { background: var(--warn-weak); color: var(--warn); }
+  .tag.unknown, .tag.invalid { background: var(--err-weak); color: var(--err); }
+  .tbl-scroll { max-height: 460px; overflow: auto; }
+  .msg { border-radius: 6px; padding: 8px 12px; font-size: 13px; margin-bottom: 10px; }
+  .msg.ok { background: var(--ok-weak); color: var(--ok); }
+  .msg.err { background: var(--err-weak); color: var(--err); white-space: pre-wrap; }
+  .msg.warn { background: var(--warn-weak); color: var(--warn); white-space: pre-wrap; }
+  .muted { color: var(--text-3); font-size: 12.5px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>导入训练参数</h1>
+    <span class="hint">把 sd-scripts 的 train.toml 按当前训练器的参数逐项对应后写入草稿</span>
+    <a href="/train">返回训练工作台</a>
+  </header>
+
+  <div class="card">
+    <h2>来源</h2>
+    <div class="row">
+      <label class="f" for="trainer">训练器</label>
+      <select id="trainer"></select>
+      <label class="f" for="name">输出名称</label>
+      <input type="text" id="name" placeholder="留空则用 toml 里的 output_name" />
+    </div>
+    <div class="row">
+      <input type="file" id="file" accept=".toml,.txt" />
+      <span class="muted">也可以直接粘贴到下面</span>
+    </div>
+    <div class="row">
+      <textarea id="toml" spellcheck="false" placeholder="pretrained_model_name_or_path = &quot;...&quot;&#10;network_dim = 32&#10;...&#10;&#10;[general]&#10;caption_extension = &quot;.txt&quot;&#10;&#10;[[datasets]]&#10;resolution = [1024, 1024]&#10;..."></textarea>
+    </div>
+    <div class="row">
+      <button class="primary" id="parse">解析并对应</button>
+      <button id="clear">清空</button>
+      <span class="grow"></span>
+      <span class="muted" id="status"></span>
+    </div>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h2>对应结果</h2>
+    <div class="row" style="margin-bottom:12px">
+      <div class="stats">
+        <div class="stat mapped"><b id="cMapped">0</b>已映射</div>
+        <div class="stat skipped"><b id="cSkipped">0</b>已跳过</div>
+        <div class="stat unknown"><b id="cUnknown">0</b>未识别</div>
+      </div>
+      <span class="grow"></span>
+      <button class="primary" id="apply">写入草稿并打开工作台</button>
+    </div>
+    <div id="messages"></div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>toml 键</th><th>状态</th><th>去向</th><th>目标字段</th><th>值</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DRAFTS_KEY = 'ls-v2-drafts';
+const SELECTED_KEY = 'ls-v2-selected-trainer';
+const $ = (id) => document.getElementById(id);
+let lastResult = null;
+
+function readDrafts() {
+  try {
+    const raw = localStorage.getItem(DRAFTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch { return {}; }
+}
+
+function setStatus(text, kind) {
+  const el = $('status');
+  el.textContent = text || '';
+  el.style.color = kind === 'err' ? 'var(--err)' : kind === 'ok' ? 'var(--ok)' : '';
+}
+
+function fmt(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+async function loadTrainers() {
+  const sel = $('trainer');
+  try {
+    const res = await fetch('/api/v2/trainers');
+    const list = await res.json();
+    const items = Array.isArray(list) ? list : (list.trainers || []);
+    sel.innerHTML = '';
+    for (const t of items) {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.title ? `${t.title} (${t.id})` : t.id;
+      sel.appendChild(opt);
+    }
+    const preferred = localStorage.getItem(SELECTED_KEY);
+    if (preferred && items.some((t) => t.id === preferred)) sel.value = preferred;
+    else if (items.some((t) => t.id === 'moss_image.lora')) sel.value = 'moss_image.lora';
+  } catch (err) {
+    setStatus('训练器目录读取失败：' + err.message, 'err');
+  }
+}
+
+$('file').addEventListener('change', async (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  $('toml').value = await f.text();
+  if (!$('name').value && f.name) {
+    $('name').value = f.name.replace(/\.(toml|txt)$/i, '');
+  }
+});
+
+$('clear').addEventListener('click', () => {
+  $('toml').value = '';
+  $('name').value = '';
+  $('file').value = '';
+  $('resultCard').classList.add('hidden');
+  lastResult = null;
+  setStatus('');
+});
+
+$('parse').addEventListener('click', async () => {
+  const text = $('toml').value;
+  if (!text.trim()) { setStatus('先粘贴或选择一份 train.toml', 'err'); return; }
+  const trainerId = $('trainer').value;
+  if (!trainerId) { setStatus('先选择训练器', 'err'); return; }
+
+  $('parse').disabled = true;
+  setStatus('解析中…');
+  try {
+    const res = await fetch('/api/v2/drafts/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trainerId, toml: text, name: $('name').value || null }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    lastResult = data;
+    render(data);
+    setStatus(`已对应 ${data.mappedCount} 项`, 'ok');
+  } catch (err) {
+    setStatus('解析失败：' + err.message, 'err');
+  } finally {
+    $('parse').disabled = false;
+  }
+});
+
+function render(data) {
+  $('resultCard').classList.remove('hidden');
+  $('cMapped').textContent = data.mappedCount ?? 0;
+  $('cSkipped').textContent = data.skippedCount ?? 0;
+  $('cUnknown').textContent = data.unknownCount ?? 0;
+
+  const msgs = $('messages');
+  msgs.innerHTML = '';
+  for (const e of data.errors || []) {
+    const div = document.createElement('div');
+    div.className = 'msg err';
+    div.textContent = (e.field ? e.field + '：' : '') + (e.message || e.code || '');
+    msgs.appendChild(div);
+  }
+  for (const w of data.warnings || []) {
+    const div = document.createElement('div');
+    div.className = 'msg warn';
+    div.textContent = (w.field ? w.field + '：' : '') + (w.message || w.code || '');
+    msgs.appendChild(div);
+  }
+
+  const tbody = $('rows');
+  tbody.innerHTML = '';
+  const order = { mapped: 0, invalid: 1, unknown: 2, skipped: 3 };
+  const rows = [...(data.mappings || [])].sort(
+    (a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9)
+  );
+  for (const m of rows) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="k">${escapeHtml(m.key)}</td>` +
+      `<td><span class="tag ${m.status}">${labelOf(m.status)}</span></td>` +
+      `<td>${escapeHtml(m.target || '')}</td>` +
+      `<td class="k">${escapeHtml(m.field || '')}</td>` +
+      `<td class="v">${escapeHtml(fmt(m.value))}</td>`;
+    if (m.message) tr.title = m.message;
+    tbody.appendChild(tr);
+  }
+}
+
+function labelOf(status) {
+  return { mapped: '已映射', skipped: '已跳过', unknown: '未识别', invalid: '不合法' }[status] || status;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+$('apply').addEventListener('click', () => {
+  if (!lastResult) { setStatus('先解析一份 train.toml', 'err'); return; }
+  if ((lastResult.errors || []).length) {
+    setStatus('还有错误，修好再写入', 'err');
+    return;
+  }
+  const trainerId = lastResult.trainerId;
+  const drafts = readDrafts();
+  const draft = { ...lastResult.draft, savedAt: new Date().toISOString() };
+  drafts[trainerId] = draft;
+  try {
+    localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+    localStorage.setItem(SELECTED_KEY, trainerId);
+  } catch (err) {
+    setStatus('写入浏览器存储失败：' + err.message, 'err');
+    return;
+  }
+  location.href = '/train';
+});
+
+loadTrainers();
+</script>
+</body>
+</html>

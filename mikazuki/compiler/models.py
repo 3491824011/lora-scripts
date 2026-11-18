@@ -90,6 +90,36 @@ class TrainDraft(BaseModel):
     sample: SampleDraft = Field(default_factory=SampleDraft)
 
 
+class ImportMappingEntry(BaseModel):
+    """train.toml 里一个键的去向，用于「每个参数对应每个」地核对。"""
+
+    key: str
+    target: str = ""
+    field: str = ""
+    value: Any = None
+    status: str = "mapped"
+    message: Optional[str] = None
+
+
+class ImportResult(BaseModel):
+    trainerId: str
+    manifestHash: str = ""
+    draft: Dict[str, Any] = Field(default_factory=dict)
+    mappings: List[ImportMappingEntry] = Field(default_factory=list)
+    warnings: List[ValidationMessage] = Field(default_factory=list)
+    errors: List[ValidationMessage] = Field(default_factory=list)
+    mappedCount: int = 0
+    skippedCount: int = 0
+    unknownCount: int = 0
+
+
+class ImportDraftRequest(BaseModel):
+    trainerId: str
+    toml: Optional[str] = None
+    path: Optional[str] = None
+    name: Optional[str] = None
+
+
 class CompileArtifacts(BaseModel):
     draft: Optional[str] = None
     trainConfig: Optional[str] = None

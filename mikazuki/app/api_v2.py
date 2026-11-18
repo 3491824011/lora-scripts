@@ -2,6 +2,7 @@ import asyncio
 import os
 import platform
 import time
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, Query
@@ -13,7 +14,7 @@ from mikazuki.app.events import (
     resolve_event_cursor as _resolve_metric_cursor,
 )
 from mikazuki.catalog import get_catalog_service
-from mikazuki.compiler import TrainDraft, compile_draft
+from mikazuki.compiler import ImportDraftRequest, TrainDraft, compile_draft, import_train_toml
 from mikazuki.compiler.models import SimpleDatasetDraft
 from mikazuki.frontend_release import release_version_payload
 from mikazuki.jobs import get_job_runner, get_job_store
@@ -103,6 +104,40 @@ async def get_training_schema():
         "title": "Dataset",
     }
     return schema
+
+
+@router.post("/drafts/import")
+async def import_draft(payload: ImportDraftRequest):
+    """把 sd-scripts 的 train.toml 转成工作台草稿。
+
+    只按当前训练器参数目录逐键对应，不新增参数；返回每个键的去向供核对。
+    """
+    catalog = get_catalog_service()
+    trainer = catalog.get_trainer(payload.trainerId)
+    if trainer is None:
+        raise HTTPException(status_code=404, detail="trainer not found")
+
+    text = payload.toml
+    if not text and payload.path:
+        source = Path(payload.path).expanduser()
+        if source.suffix.lower() not in {".toml", ".txt"}:
+            raise HTTPException(status_code=400, detail="only .toml/.txt is accepted")
+        if not source.is_file():
+            raise HTTPException(status_code=400, detail="file not found")
+        if source.stat().st_size > 4 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="file is too large")
+        text = await asyncio.to_thread(source.read_text, encoding="utf-8", errors="replace")
+
+    if not text or not text.strip():
+        raise HTTPException(status_code=400, detail="toml is empty")
+
+    result = import_train_toml(
+        trainer,
+        text,
+        manifest_hash=catalog.manifest_hash,
+        base_name=payload.name or "",
+    )
+    return result.model_dump(exclude_none=True)
 
 
 @router.post("/compile")
